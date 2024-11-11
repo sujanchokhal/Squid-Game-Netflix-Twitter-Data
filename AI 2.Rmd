@@ -1,0 +1,137 @@
+---
+output:
+  word_document: default
+  html_document: default
+date: "2023-08-24"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+
+
+```{r}
+library(readr)
+cleaned_tweets <-read.csv("/Users/sujanchokhal/Desktop/cleaned_tweets.csv")
+```
+
+
+```{r}
+# Load necessary packages
+library(tidytext)
+library(dplyr)
+```
+
+
+```{r}
+# Load sentiment lexicon
+data("sentiments")
+afinn_lexicon <- sentiments %>%
+  filter(sentiment %in% c("positive", "negative"))
+```
+
+
+```{r}
+# Assuming you have a data frame 'cleaned_tweets' with a column 'text'
+
+# Tokenize the tweet texts
+tokens <- cleaned_tweets %>%
+  unnest_tokens(word, text)
+
+# Join with the AFINN-111 lexicon to get sentiment scores
+sentiment_scores <- tokens %>%
+  inner_join(afinn_lexicon, by = "word")
+```
+
+
+```{r}
+# Summarize the most common positive and negative words
+most_common_positive <- sentiment_scores %>%
+  filter(sentiment == "positive") %>%
+  count(word, sort = TRUE) %>%
+  head(10)
+```
+
+
+```{r}
+most_common_negative <- sentiment_scores %>%
+  filter(sentiment == "negative") %>%
+  count(word, sort = TRUE) %>%
+  head(10)
+```
+
+
+
+```{r}
+# Print the results
+print("Most Common Positive Words:")
+print(most_common_positive)
+```
+
+
+```{r}
+# Print the results
+print("Most Common negative Words:")
+print(most_common_negative)
+```
+
+
+
+```{r}
+# Load sentiment lexicon
+ data("sentiments")
+ bing <- get_sentiments("bing")
+  # Filter sentiments from Bing lexicon
+ bing_sentiments <- bing %>%
+    filter(sentiment == "positive" | sentiment == "negative")
+
+ # Now you can continue using bing_sentiments
+library(dplyr)
+library(ggplot2)
+bing_word_counts %>%
+group_by(sentiment) %>%
+  
+slice_max(n, n = 10) %>%
+ungroup() %>%
+mutate(word = reorder(word, n)) %>%
+ggplot(aes(n, word, fill = sentiment)) +
+geom_col(show.legend = FALSE) +
+facet_wrap(~sentiment, scales = "free_y") +
+  labs(x = "Contribution to Sentiment", y = NULL)
+```
+
+```{r}
+library(wordcloud)
+library(dplyr)
+library(tidytext)
+cleaned_tweets %>%
+unnest_tokens(word, text) %>%
+ filter(!word %in% stop_words$word) %>%
+ count(word, sort = TRUE) %>%
+ with(wordcloud(word, n, max.words = 100))
+```
+
+```{r}
+library(tm)  # For comparison.cloud function
+library(dplyr)
+library(reshape2)
+install.packages("wordcloud")
+library(wordcloud)
+
+bing_word_counts %>%
+  acast(word ~ sentiment, value.var = "n", fill = 0) %>%
+  comparison.cloud(colors = c("gray20", "gray80"), max.words = 100)
+```
+
+
+
+
+
+
+
+
+
+

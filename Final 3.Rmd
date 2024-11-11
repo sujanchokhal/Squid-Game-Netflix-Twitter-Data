@@ -1,0 +1,132 @@
+---
+title: "final"
+output: word_document
+date: "2023-08-31"
+
+#Sujan Chokhal
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+#loading data
+library(readr)
+cleaned_tweets <-read.csv("/Users/sujanchokhal/Desktop/cleaned_tweets.csv")
+```
+
+```{r}
+ # Loading required libraries
+ library(dplyr)
+library(tidytext)
+library(ggplot2)
+ library(kableExtra)
+library (tidyr)
+
+```
+
+
+```{r}
+# Load sentiment lexicons
+lexicons <- c("afinn", "bing", "nrc")
+
+for (lexicon in lexicons) {
+  get_sentiments(lexicon)
+}
+```
+
+
+```{r}
+# Load stop words dataset
+data(stop_words)
+
+
+# Add a unique ID column to the cleaned_tweets dataset
+cleaned_tweets <- cleaned_tweets %>%
+  mutate(tweet_id = row_number())
+```
+```{r}
+# Load sentiment lexicons
+get_sentiments("afinn")
+get_sentiments("bing")
+
+```
+
+
+```{r}
+# Perform sentiment analysis using AFINN lexicon
+afinn <- cleaned_tweets %>%
+  select(tweet_id, text) %>%
+  unnest_tokens(word, text) %>%
+  inner_join(get_sentiments("afinn"), by = "word") %>%
+  group_by(tweet_id) %>%
+  summarise(sentiment = sum(value)) %>%
+  mutate(method = "AFINN")
+
+```
+
+
+```{r}
+# Sentiment analysis using Bing lexicon
+bing_results <- cleaned_tweets %>%
+  select(tweet_id, text) %>%
+  unnest_tokens(word, text) %>%
+  inner_join(get_sentiments("bing"), by = "word") %>%
+  mutate(method = "Bing et al.") %>%
+  count(method, tweet_id, sentiment) %>%
+  pivot_wider(names_from = sentiment, values_from = n, values_fill = 0) %>%
+  mutate(sentiment = positive - negative)
+```
+
+```{r}
+# Sentiment analysis using NRC lexicon
+nrc_results <- cleaned_tweets %>%
+  select(tweet_id, text) %>%
+  unnest_tokens(word, text) %>%
+  inner_join(get_sentiments("nrc"), by = c("word" = "word"), relationship = "many-to-many") %>%
+  filter(sentiment %in% c("positive", "negative")) %>%
+  mutate(method = "NRC") %>%
+  count(method, tweet_id, sentiment) %>%
+  pivot_wider(names_from = sentiment, values_from = n, values_fill = 0) %>%
+  mutate(sentiment = positive - negative)
+
+```
+
+```{r}
+# Combine results and generate visualization
+combined_results <- bind_rows(afinn, bing_results, nrc_results)
+visualization <- combined_results %>%
+  ggplot(aes(tweet_id, sentiment, fill = method)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~method, ncol = 1, scales = "free_y")
+
+
+```
+
+```{r}
+# Display sentiment counts in a table
+sentiment_counts <- data.frame(
+  Lexicon = rep(c("AFINN", "Bing", "NRC"), each = 3),
+  Sentiment = rep(c("Positive", "Negative", "Neutral"), times = 3),
+  Count = c(
+    sum(afinn$sentiment > 0), sum(afinn$sentiment < 0), sum(afinn$sentiment == 0),
+    sum(bing_results$sentiment > 0), sum(bing_results$sentiment < 0), sum(bing_results$sentiment == 0),
+    sum(nrc_results$sentiment > 0), sum(nrc_results$sentiment < 0), sum(nrc_results$sentiment == 0)
+  )
+)
+
+```
+```{r}
+kable(table_data, format = "markdown", col.names = c("Lexicon", "Sentiment", "Count"))
+```
+
+```{r}
+# Display the table using kable
+table_output <- kable(sentiment_counts, format = "markdown", col.names = c("Lexicon", "Sentiment", "Count"))
+
+# Display the visualization
+print(visualization)
+```
+

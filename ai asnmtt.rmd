@@ -1,0 +1,179 @@
+---
+
+
+---
+* this is my assignmnet *
+
+** this is assignment ** 
+
+# Assignment # 
+## Sujan Chokhal
+
+
+```{r}
+library(readr)
+cleaned_tweets <-read.csv("/Users/sujanchokhal/Desktop/cleaned_tweets.csv")
+```
+
+
+```{r}
+library(dplyr)
+library(ggplot2)
+```
+```{r}
+cleaned_tweets <- cleaned_tweets %>%
+  filter(!is.na(date) & !is.na(as.POSIXct(date, format = "%Y-%m-%d %H:%M:%S")))
+```
+
+```{r}
+ggplot(cleaned_tweets, aes(x = date)) +
+  geom_bar(stat = "count", fill = "blue", color = "black") +
+  labs(title = "Tweet Frequency Over Time", x = "Date", y = "Frequency")
+```
+
+```{r}
+top_locations <- cleaned_tweets %>%
+  group_by(user_location) %>%
+  summarise(tweet_count = n()) %>%
+  arrange(desc(tweet_count)) %>%
+  head(10)
+```
+
+
+```{r}
+top_locations <- cleaned_tweets %>%
+  group_by(user_location) %>%
+  summarise(tweet_count = n()) %>%
+  arrange(desc(tweet_count)) %>%
+  head(10)
+top_locations
+```
+
+
+
+
+```{r}
+library(tidyverse)
+top_retweeted <- cleaned_tweets %>%
+  arrange(desc(is_retweet)) %>%
+  select(user_name, text, is_retweet) %>%
+  head(20)
+View(top_retweeted)
+top_retweeted
+```
+
+
+
+```{r}
+# Load necessary packages
+library(tidytext)
+library(dplyr)
+
+# Load sentiment lexicon
+data("sentiments")
+afinn_lexicon <- sentiments %>%
+  filter(sentiment %in% c("positive", "negative"))
+
+# Assuming you have a data frame 'cleaned_tweets' with a column 'text'
+
+# Tokenize the tweet texts
+tokens <- cleaned_tweets %>%
+  unnest_tokens(word, text)
+
+# Join with the AFINN-111 lexicon to get sentiment scores
+sentiment_scores <- tokens %>%
+  inner_join(afinn_lexicon, by = "word")
+
+# Summarize the most common positive and negative words
+most_common_positive <- sentiment_scores %>%
+  filter(sentiment == "positive") %>%
+  count(word, sort = TRUE) %>%
+  head(10)
+
+most_common_negative <- sentiment_scores %>%
+  filter(sentiment == "negative") %>%
+  count(word, sort = TRUE) %>%
+  head(10)
+```
+
+
+```{r}
+# Print the results
+print("Most Common Positive Words:")
+print(most_common_positive)
+```
+
+
+```{r}
+print("Most Common Negative Words:")
+print(most_common_negative)
+
+
+```
+
+```{r}
+
+library(dplyr)
+library(ggplot2)
+library(ggplot2)
+
+
+bing_word_counts %>%
+  group_by(sentiment) %>%
+  slice_max(n, n = 10) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(n, word, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_y") +
+  labs(x = "Contribution to Sentiment", y = NULL)
+
+```
+
+
+
+```{r}
+library(wordcloud)
+library(dplyr)
+library(tidytext)
+cleaned_tweets %>%
+unnest_tokens(word, text) %>%
+ filter(!word %in% stop_words$word) %>%
+ count(word, sort = TRUE) %>%
+ with(wordcloud(word, n, max.words = 100))
+```
+
+
+```{r}
+library(tm)  # For comparison.cloud function
+library(dplyr)
+library(reshape2)
+install.packages("wordcloud")
+library(wordcloud)
+
+bing_word_counts %>%
+  acast(word ~ sentiment, value.var = "n", fill = 0) %>%
+  comparison.cloud(colors = c("gray20", "gray80"), max.words = 100)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
